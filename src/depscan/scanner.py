@@ -707,7 +707,7 @@ def _cargo_toml(content: str) -> dict | None:
 def _cargo_load(directory: Path) -> dict | None:
     """Parse ``directory/Cargo.toml``; None if it is missing or unreadable."""
     try:
-        text = (directory / "Cargo.toml").read_text(encoding="utf-8", errors="replace")
+        text = (directory / "Cargo.toml").read_text(encoding="utf-8-sig", errors="replace")
     except OSError:
         return None
     return _cargo_toml(text)
@@ -871,7 +871,7 @@ class MultiScanner:
         files in the same scan; a Cargo member drops an inherited entry only when
         its workspace root manifest is in that set and reports the entry itself.
         """
-        content = Path(filepath).read_text(encoding="utf-8", errors="replace")
+        content = Path(filepath).read_text(encoding="utf-8-sig", errors="replace")
         path = Path(filepath)
 
         # Try by filename
@@ -895,7 +895,7 @@ class MultiScanner:
                 reported = {
                     (dep.name, dep.version)
                     for dep in self.parser.parse_cargo_toml(
-                        found[0].read_text(encoding="utf-8", errors="replace")
+                        found[0].read_text(encoding="utf-8-sig", errors="replace")
                     )
                 }
                 deps = [dep for dep in deps if (dep.name, dep.version) not in reported]

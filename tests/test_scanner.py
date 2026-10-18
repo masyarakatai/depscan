@@ -1889,3 +1889,45 @@ def test_scan_directory_tolerates_a_non_utf8_ancestor_manifest(tmp_path):
         handle.write(b"\n# caf\xe9 latin-1 comment\n")
     deps = MultiScanner().scan_directory(str(tmp_path))
     assert [(dep.name, dep.version) for dep in deps] == [("serde", "1.0.190")]
+
+
+class TestUtf8Bom:
+    """Regression #2: a UTF-8 BOM at the start of a lockfile must not silently drop deps."""
+
+    def test_bom_requirements_txt(self, tmp_path):
+        """BOM'd requirements.txt parses the same as plain."""
+        plain = tmp_path / "requirements.txt"
+        plain.write_text("requests==2.31.0\nflask>=2.0\n", encoding="utf-8")
+        bom = tmp_path / "requirements_bom.txt"
+        bom.write_bytes(b"\xef\xbb\xbfrequests==2.31.0\nflask>=2.0\n")
+        scanner = MultiScanner()
+        plain_deps = scanner.scan_file(str(plain))
+        bom_deps = scanner.scan_file(str(bom))
+        assert len(bom_deps) == len(plain_deps) == 2
+        assert [d.name for d in bom_deps] == [d.name for d in plain_deps]
+
+    def test_bom_cargo_toml(self, tmp_path):
+        """BOM'd Cargo.toml parses the same as plain."""
+        plain = tmp_path / "Cargo.toml"
+        plain.write_text('[package]\nname = "foo"\nversion = "1.0.0"\n', encoding="utf-8")
+        bom = tmp_path / "Cargo_bom.toml"
+        bom.write_bytes(b'\xef\xbb\xbf[package]\nname = "foo"\nversion = "1.0.0"\n')
+        scanner = MultiScanner()
+        plain_deps = scanner.scan_file(str(plain))
+        bom_deps = scanner.scan_file(str(bom))
+        assert len(bom_deps) == len(plain_deps)
+
+    def test_bom_package_json(self, tmp_path):
+        """BOM'd package.json parses the same as plain."""
+        sub_plain = tmp_path / "plain"
+        sub_plain.mkdir()
+        plain = sub_plain / "package.json"
+        plain.write_text('{"name": "foo", "dependencies": {"lodash": "^4.0.0"}}', encoding="utf-8")
+        sub_bom = tmp_path / "bom"
+        sub_bom.mkdir()
+        bom = sub_bom / "package.json"
+        bom.write_bytes(b'\xef\xbb\xbf{"name": "foo", "dependencies": {"lodash": "^4.0.0"}}')
+        scanner = MultiScanner()
+        plain_deps = scanner.scan_file(str(plain))
+        bom_deps = scanner.scan_file(str(bom))
+        assert len(bom_deps) == len(plain_deps) == 1
