@@ -20,6 +20,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from depscan import __version__ as _VERSION
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -171,7 +173,7 @@ def to_sarif(findings: list[Finding], repo_root: str = ".") -> dict[str, Any]:
                 "tool": {
                     "driver": {
                         "name": "depscan",
-                        "version": "0.1.0",
+                        "version": _VERSION,
                         "informationUri": PROJECT_URL,
                         "rules": rules,
                     }

@@ -116,6 +116,13 @@ class TestSarifTool:
         assert "version" in driver
         assert driver["version"]  # non-empty
 
+    def test_driver_version_matches_package_version(self, empty_sarif):
+        """SARIF driver version must equal depscan.__version__ (issue #4)."""
+        from depscan import __version__
+
+        driver = empty_sarif["runs"][0]["tool"]["driver"]
+        assert driver["version"] == __version__
+
     def test_driver_has_information_uri(self, empty_sarif):
         driver = empty_sarif["runs"][0]["tool"]["driver"]
         assert "informationUri" in driver
