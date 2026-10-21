@@ -1414,6 +1414,26 @@ def test_go_sum_marks_only_unrequired_modules_orphaned(tmp_path):
     assert go_sum["github.com/acme/foo"].is_orphaned is False
     assert go_sum["github.com/acme/bar"].is_orphaned is True
 
+
+def test_scan_records_source_file_for_every_ecosystem(tmp_path):
+    """source_file is provenance consumed by SBOM/SARIF/JSON, not a Go-only field.
+
+    Regression for the gap behind issue #8: only go.mod/go.sum ever set it, so a
+    Cargo.lock or requirements.txt scan reported an empty path for every dependency.
+    """
+    (tmp_path / "Cargo.lock").write_text(
+        "[[package]]\nname = \"anyhow\"\nversion = \"1.0.86\"\n", encoding="utf-8"
+    )
+    (tmp_path / "requirements.txt").write_text("requests==2.32.3\n", encoding="utf-8")
+
+    deps = MultiScanner().scan_directory(str(tmp_path))
+
+    assert {dep.ecosystem for dep in deps} == {"cargo", "pypi"}
+    assert all(dep.source_file for dep in deps), "no dependency may lose its path"
+    by_ecosystem = {dep.ecosystem: dep for dep in deps}
+    assert Path(by_ecosystem["cargo"].source_file).name == "Cargo.lock"
+    assert Path(by_ecosystem["pypi"].source_file).name == "requirements.txt"
+
     """Tests for validate_package_name() and the check() subprocess guard.
 
     These tests exercise the security boundary introduced to prevent

@@ -909,18 +909,19 @@ class MultiScanner:
             deps = self.parser.parse_requirements_txt(content)
         elif filename == "go.mod":
             deps = self.parser.parse_go_mod(content)
-            for dep in deps:
-                dep.source_file = str(path)
         elif filename == "go.sum":
             deps = self.parser.parse_go_sum(content)
-            for dep in deps:
-                dep.source_file = str(path)
         elif "poetry.lock" in filename:
             deps = self.parser.parse_poetry_lock(content)
         elif filename == "pyproject.toml":
             deps = self.parser.parse_pyproject_toml(content)
         elif "gemfile.lock" in filename:
             deps = self.parser.parse_gemfile_lock(content)
+
+        # Provenance is not Go-specific: SBOM/SARIF/JSON all read source_file, and
+        # every ecosystem but go.mod/go.sum used to report an empty path.
+        for dep in deps:
+            dep.source_file = str(path)
 
         return self._validated(deps)
 
