@@ -45,6 +45,16 @@ def test_scan_markdown_output(tmp_path):
     assert "# Dependency Scan Report" in result.stdout
 
 
+def test_scan_strict_reports_invalid_package_without_traceback(tmp_path):
+    (tmp_path / "requirements.txt").write_text("evil;command==2.0\n")
+
+    result = CliRunner().invoke(cli, ["scan", "--strict", "--no-typosquat", str(tmp_path)])
+
+    assert result.exit_code == 1
+    assert "Error: Invalid package name" in result.output
+    assert "Traceback" not in result.output
+
+
 def test_check_invalid_name_rejects_injection(tmp_path):
     """Security: malformed package names must be rejected without spawning subprocess."""
     result = run_depscan("check", "foo; rm -rf /", "1.0.0")
