@@ -140,6 +140,17 @@ def test_ci_allow_known_ignores_vulnerabilities():
     assert "No blocking dependency findings" in result.output
 
 
+def test_ci_sarif_stdout_is_valid_json(tmp_path):
+    results = {"total": 0, "typosquats": [], "vulnerable": [], "by_ecosystem": {}}
+    with patch.object(MultiScanner, "scan_and_check", return_value=results):
+        result = CliRunner().invoke(cli, ["ci", "--sarif", str(tmp_path)])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["version"] == "2.1.0"
+    assert "No blocking dependency findings" not in result.stdout
+    assert "No blocking dependency findings" in result.stderr
+
+
 def test_ci_exits_one_for_real_typosquat(tmp_path):
     """Control test: a real typosquat on disk must fail ``depscan ci``.
 

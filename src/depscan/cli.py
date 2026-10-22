@@ -307,7 +307,7 @@ def ci(path, allow_known, sarif_out):
         has_findings = has_findings or bool(results.get("vulnerable"))
     if has_findings:
         raise click.exceptions.Exit(1)
-    click.echo("No blocking dependency findings", err=not sarif_out)
+    click.echo("No blocking dependency findings", err=True)
 
 
 @cli.command()
