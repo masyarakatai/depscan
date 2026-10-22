@@ -46,7 +46,7 @@ def validate_config(data: Any) -> dict[str, Any]:
         raise ValueError(f"unknown option: {sorted(unknown)[0]}")
     if "typosquat" in data and not isinstance(data["typosquat"], bool):
         raise ValueError("typosquat must be true or false")
-    if data.get("output_format") not in OUTPUT_FORMATS:
+    if "output_format" in data and data["output_format"] not in OUTPUT_FORMATS:
         raise ValueError("output_format must be text, json, markdown, or sarif")
     if "fail_on" in data and data["fail_on"] not in FAIL_ON_VALUES:
         raise ValueError("fail_on must be typosquat, vulnerable, or any")
@@ -65,4 +65,6 @@ def load_config(path: str | Path) -> dict[str, Any]:
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
         raise ValueError(f"invalid YAML: {exc}") from exc
+    if data is None:
+        data = {}
     return validate_config(data)
