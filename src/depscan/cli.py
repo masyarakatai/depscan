@@ -101,15 +101,18 @@ def scan(
         output_format = "markdown"
 
     def run_scan():
-        return scanner.scan_and_check(
-            path,
-            parallel=parallel,
-            max_workers=max_workers,
-            excludes=set(exclude_dirs),
-            include_hidden=include_hidden,
-            respect_ignores=respect_ignores,
-            exclude_patterns=list(exclude_patterns),
-        )
+        try:
+            return scanner.scan_and_check(
+                path,
+                parallel=parallel,
+                max_workers=max_workers,
+                excludes=set(exclude_dirs),
+                include_hidden=include_hidden,
+                respect_ignores=respect_ignores,
+                exclude_patterns=list(exclude_patterns),
+            )
+        except ValueError as exc:
+            raise click.ClickException(str(exc)) from exc
 
     def apply_filters(results):
         from depscan.filters import filter_results
